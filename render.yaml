@@ -2,6 +2,7 @@ services:
   - type: web
     name: dota-mmr-tracker
     runtime: node
+    region: frankfurt
     plan: free
     buildCommand: npm ci
     startCommand: npm start
