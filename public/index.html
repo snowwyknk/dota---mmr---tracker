@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dota 2 MMR Calculator & Tracker</title>
+    <link href="assets/vendor/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+    <!-- Фоновая анимация -->
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="container py-5">
+        <h1 class="text-center mb-5" style="color: #c23b22; text-shadow: 0 0 10px #c23b22;">Dota 2 Tracker</h1>
+
+        <div class="row g-4">
+            <!-- Профиль игрока -->
+            <div class="col-lg-4">
+                <div class="dota-card p-4 text-center h-100">
+                    <h3 class="mb-4">Профиль игрока</h3>
+                    <p id="loginError" class="text-danger" role="alert" style="display: none;">Не удалось войти через Steam. Попробуйте ещё раз.</p>
+                    <div id="profileLoggedOut">
+                        <div class="profile-avatar mb-3" aria-hidden="true">D2</div>
+                        <h4>Войдите, чтобы создать профиль</h4>
+                        <p class="text-muted">Сохраняйте свой MMR в приватном профиле.</p>
+                        <a href="/auth/steam" class="btn dota-btn w-100 mb-2">Войти через Steam</a>
+                        <small class="text-muted">Сайт не запрашивает и не хранит пароль Steam.</small>
+                    </div>
+                    <div id="profileLoggedIn" style="display: none;">
+                        <div class="profile-avatar mb-3" aria-hidden="true">D2</div>
+                        <h4>Ваш Steam-профиль</h4>
+                        <p class="text-muted mb-1">Steam ID:</p>
+                        <a id="steamProfileLink" class="text-warning" target="_blank" rel="noopener noreferrer"></a>
+                        <p class="small text-muted mt-3">Этот профиль и сохранённый MMR видны только вам.</p>
+                        <form id="profileForm" class="text-start mt-3">
+                            <label class="form-label" for="profileMmr">Мой текущий MMR:</label>
+                            <input type="number" id="profileMmr" class="form-control mb-2" min="0" max="100000" step="1" inputmode="numeric" required>
+                            <button type="submit" class="btn dota-btn w-100">Сохранить MMR</button>
+                            <p id="profileMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
+                        </form>
+                        <button id="logoutButton" type="button" class="btn btn-outline-light w-100 mt-3">Выйти</button>
+                    </div>
+                    <p id="profileLoadError" class="text-danger small mt-3" role="alert" style="display: none;">Не удалось загрузить профиль. Попробуйте обновить страницу.</p>
+                </div>
+            </div>
+
+            <!-- Калькулятор -->
+            <div class="col-lg-8">
+                <div class="dota-card p-4 h-100">
+                    <h3 class="mb-4 text-center">Калькулятор MMR</h3>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="currentMmr">Текущий MMR:</label>
+                            <input type="number" id="currentMmr" class="form-control form-control-lg" value="2100" min="0" step="1" inputmode="numeric">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="targetRank">Желаемый ранг:</label>
+                            <div class="rank-select-row">
+                                <select id="targetRank" class="form-select form-select-lg" style="background: rgba(0,0,0,0.5); color: #fff; border-color: #555;">
+                                    <option value="0" data-medal="herald">Рекрут (0-769)</option>
+                                    <option value="770" data-medal="guardian">Страж (770-1539)</option>
+                                    <option value="1540" data-medal="crusader">Рыцарь (1540-2309)</option>
+                                    <option value="2310" data-medal="archon" selected>Герой (2310-3079)</option>
+                                    <option value="3080" data-medal="legend">Легенда (3080-3849)</option>
+                                    <option value="3850" data-medal="ancient">Властелин (3850-4619)</option>
+                                    <option value="4620" data-medal="divine">Божество (4620-5419)</option>
+                                    <option value="5420" data-medal="immortal">Титан (5420+)</option>
+                                </select>
+                                <div class="rank-preview" aria-live="polite">
+                                    <div id="rankMedal" class="rank-medal" role="img"></div>
+                                    <span id="rankName"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="mmrPerGame">MMR за победу / поражение:</label>
+                            <input type="number" id="mmrPerGame" class="form-control form-control-lg" value="25" min="1" step="1" inputmode="numeric">
+                            <small class="text-muted">Оценка: фактическое изменение MMR может отличаться.</small>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-4">
+                        <button id="calculateButton" type="button" class="btn dota-btn btn-lg px-5">Рассчитать</button>
+                    </div>
+
+                    <!-- Результаты -->
+                    <p id="calculationError" class="text-danger text-center" role="alert" style="display: none;"></p>
+                    <div id="results" aria-live="polite" style="display: none;">
+                        <h4 class="text-center mb-3" style="color: #f0a500;">Результаты</h4>
+
+                        <div class="row text-center">
+                            <div class="col-md-4 mb-2">
+                                <div class="result-box">
+                                    <div class="medal-icon">🏆</div>
+                                    <div class="text-muted small">До цели</div>
+                                    <strong id="mmrNeeded">0 MMR</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <div class="result-box">
+                                    <div class="medal-icon">⚔️</div>
+                                    <div class="text-muted small">Побед до цели</div>
+                                    <strong id="winsNeeded">0</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <div class="result-box">
+                                    <div class="medal-icon">💀</div>
+                                    <div class="text-muted small">Поражений до ранга ниже</div>
+                                    <strong id="lossesNeeded">0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <section class="dota-card p-4 mt-4" aria-labelledby="heroCalculatorTitle">
+            <h2 id="heroCalculatorTitle" class="h3 mb-2 text-center">Калькулятор уровней героя Dota Plus</h2>
+            <p class="text-muted text-center mb-4">Узнайте, сколько опыта нужно герою до выбранного уровня и медали.</p>
+
+            <div class="row g-4 align-items-end">
+                <div class="col-lg-5">
+                    <label class="form-label" for="heroCurrentLevel">Текущий уровень героя:</label>
+                    <select id="heroCurrentLevel" class="form-select form-select-lg">
+                        <option value="0">Новый герой — до уровня 1</option>
+                    </select>
+                    <div class="hero-tier-preview mt-3">
+                        <img id="heroCurrentTierImage" class="hero-tier-image" src="assets/images/dota-plus/bronze.png" alt="Медаль Бронзы">
+                        <span id="heroCurrentTierName">Бронза</span>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <label class="form-label" for="heroCurrentProgress">Опыт уже набран к следующему уровню:</label>
+                    <input type="number" id="heroCurrentProgress" class="form-control form-control-lg" value="0" min="0" step="1" inputmode="numeric">
+                    <small id="heroProgressHint" class="text-muted">Укажите накопленный опыт текущего уровня.</small>
+                </div>
+                <div class="col-lg-4">
+                    <label class="form-label" for="heroTargetLevel">Целевой уровень:</label>
+                    <select id="heroTargetLevel" class="form-select form-select-lg">
+                        <option value="30">Уровень 30 — Грандмастер</option>
+                    </select>
+                    <div class="hero-tier-preview mt-3">
+                        <img id="heroTargetTierImage" class="hero-tier-image" src="assets/images/dota-plus/grandmaster.png" alt="Медаль Грандмастера">
+                        <span id="heroTargetTierName">Грандмастер</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center my-4">
+                <button id="heroCalculateButton" type="button" class="btn dota-btn btn-lg px-5">Рассчитать опыт</button>
+            </div>
+            <p id="heroCalculationError" class="text-danger text-center" role="alert" style="display: none;"></p>
+            <div id="heroResults" class="row text-center" aria-live="polite">
+                <div class="col-md-6 mb-2">
+                    <div class="result-box hero-result">
+                        <div class="text-muted small">Опыта до цели</div>
+                        <strong id="heroXpNeeded">72 050 XP</strong>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <div class="result-box hero-result">
+                        <div class="text-muted small">Уровней до цели</div>
+                        <strong id="heroLevelsNeeded">30</strong>
+                    </div>
+                </div>
+            </div>
+            <p class="hero-calculator-note small text-muted mb-0">
+             Уровень 0 означает нового героя: полный путь до 30-го уровня — 72 050 XP. Если герой уже на 1-м уровне, до 30-го остаётся 72 000 XP. Награды и осколки в расчёт не входят.
+            </p>
+        </section>
+    </div>
+
+    <script src="assets/js/hero-progression.js" defer></script>
+    <script src="assets/js/app.js" defer></script>
+</body>
+</html>

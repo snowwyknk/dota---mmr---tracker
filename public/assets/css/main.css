@@ -1,0 +1,135 @@
+body {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+.text-muted {
+    color: #c2c2c2 !important;
+}
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at center, #2c1a1a 0%, #0f0f0f 100%);
+        }
+        .dota-card {
+            background: rgba(30, 30, 30, 0.85);
+            border: 1px solid #4a3a3a;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+        }
+        .dota-card:hover {
+            transform: translateY(-5px);
+            border-color: #c23b22;
+        }
+        .dota-btn {
+            background-color: #c23b22;
+            border: none;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+        .dota-btn:hover {
+            background-color: #e04a2b;
+            box-shadow: 0 0 15px #c23b22;
+        }
+        .profile-avatar {
+            display: grid;
+            place-items: center;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+            border: 2px solid #c23b22;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #481a16, #161616);
+            color: #f0a500;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .medal-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        h1, h2, h3 { text-transform: uppercase; letter-spacing: 2px; }
+        .form-control {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #555;
+            color: #fff;
+        }
+        .form-control:focus {
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border-color: #c23b22;
+            box-shadow: none;
+        }
+        .result-box {
+            background: rgba(194, 59, 34, 0.2);
+            border: 1px dashed #c23b22;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+        .rank-select-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .rank-select-row select {
+            min-width: 0;
+            flex: 1;
+        }
+        .rank-preview {
+            min-width: 96px;
+            text-align: center;
+            color: #f0a500;
+            font-size: 0.8rem;
+        }
+        .rank-medal {
+            width: 96px;
+            height: 96px;
+            background-image: url("../images/rank-medals.png");
+            background-repeat: no-repeat;
+            margin: 0 auto;
+            filter: drop-shadow(0 0 6px rgba(240, 165, 0, 0.35));
+        }
+        .rank-herald { background-position: -44px -20px; }
+        .rank-guardian { background-position: -197px -20px; }
+        .rank-crusader { background-position: -346px -20px; }
+        .rank-archon { background-position: -500px -20px; }
+        .rank-legend { background-position: -107px -168px; }
+        .rank-ancient { background-position: -260px -168px; }
+        .rank-divine { background-position: -414px -168px; }
+        .rank-immortal {
+            background-image: url("../images/titan.png");
+            background-position: center;
+            background-size: contain;
+        }
+        .hero-tier-preview {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #f0a500;
+            font-weight: 600;
+        }
+        .hero-tier-image {
+            width: 76px;
+            height: 76px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 6px rgba(240, 165, 0, 0.35));
+        }
+        .hero-result {
+            min-height: 92px;
+        }
+        .hero-calculator-note {
+            border-left: 3px solid #c23b22;
+            padding-left: 0.75rem;
+        }
