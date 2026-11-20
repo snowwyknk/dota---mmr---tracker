@@ -22,6 +22,7 @@ const {
 } = require('./db');
 const { isValidSteamId, isValidOpenIdNonce } = require('./steam-id');
 const { createSteamLoginState, consumeSteamLoginState } = require('./login-state');
+const { fetchSteamProfile } = require('./steam-profile');
 const { isValidMmr } = require('./validation');
 
 const app = express();
@@ -29,6 +30,7 @@ const port = Number(process.env.PORT) || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET;
 const databaseUrl = process.env.DATABASE_URL;
+const steamApiKey = process.env.STEAM_API_KEY;
 const configuredBaseUrl = process.env.BASE_URL ||
     process.env.RENDER_EXTERNAL_URL ||
     `http://localhost:${port}`;
@@ -72,7 +74,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", 'data:'],
+            imgSrc: ["'self'", 'data:', 'https://avatars.steamstatic.com', 'https://steamcdn-a.akamaihd.net', 'https://steamcommunity.akamaihd.net'],
             fontSrc: ["'self'", 'data:'],
             connectSrc: ["'self'"],
             objectSrc: ["'none'"],
@@ -168,7 +170,15 @@ function createSteamOpenIdStrategy(returnURL) {
 
         try {
             await recordOpenIdNonce(nonce);
-            return done(null, await findOrCreateProfile(steamId));
+            let publicSteamProfile = null;
+            if (steamApiKey) {
+                try {
+                    publicSteamProfile = await fetchSteamProfile(steamId, steamApiKey);
+                } catch {
+                    console.warn('Unable to refresh public Steam profile details; login will continue.');
+                }
+            }
+            return done(null, await findOrCreateProfile(steamId, publicSteamProfile));
         } catch (error) {
             if (error.code === '23505') {
                 return done(new SteamOpenIdError(
@@ -207,6 +217,8 @@ function serializeProfile(profile) {
     return {
         steamId: profile.steam_id,
         steamProfileUrl: `https://steamcommunity.com/profiles/${profile.steam_id}`,
+        personaName: profile.steam_persona_name,
+        avatarUrl: profile.steam_avatar_url,
         currentMmr: profile.current_mmr,
         createdAt: profile.created_at,
         updatedAt: profile.updated_at

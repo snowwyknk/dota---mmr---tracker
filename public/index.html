@@ -29,8 +29,11 @@
                         <small class="text-muted">Сайт не запрашивает и не хранит пароль Steam.</small>
                     </div>
                     <div id="profileLoggedIn" style="display: none;">
-                        <div class="profile-avatar mb-3" aria-hidden="true">D2</div>
-                        <h4>Ваш Steam-профиль</h4>
+                        <div class="profile-avatar profile-avatar-frame mb-3" aria-hidden="true">
+                            <span id="steamAvatarFallback">D2</span>
+                            <img id="steamAvatar" class="profile-avatar-image" alt="" referrerpolicy="no-referrer" style="display: none;">
+                        </div>
+                        <h4 id="steamPersonaName">Игрок Steam</h4>
                         <p class="text-muted mb-1">Steam ID:</p>
                         <a id="steamProfileLink" class="text-warning" target="_blank" rel="noopener noreferrer"></a>
                         <p class="small text-muted mt-3">Этот профиль и сохранённый MMR видны только вам.</p>

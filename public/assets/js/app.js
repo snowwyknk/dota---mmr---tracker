@@ -213,9 +213,25 @@
                 document.getElementById('profileLoggedOut').style.display = "none";
                 document.getElementById('profileLoggedIn').style.display = "block";
 
+                document.getElementById('steamPersonaName').textContent =
+                    profile.personaName || 'Игрок Steam';
                 const steamLink = document.getElementById('steamProfileLink');
                 steamLink.href = profile.steamProfileUrl;
                 steamLink.textContent = profile.steamId;
+
+                const avatar = document.getElementById('steamAvatar');
+                const avatarFallback = document.getElementById('steamAvatarFallback');
+                if (profile.avatarUrl) {
+                    avatar.onload = () => {
+                        avatar.style.display = 'block';
+                        avatarFallback.style.display = 'none';
+                    };
+                    avatar.onerror = () => {
+                        avatar.style.display = 'none';
+                        avatarFallback.style.display = 'block';
+                    };
+                    avatar.src = profile.avatarUrl;
+                }
 
                 if (profile.currentMmr !== null) {
                     document.getElementById('profileMmr').value = profile.currentMmr;
