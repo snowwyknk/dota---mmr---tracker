@@ -213,8 +213,23 @@ body {
             background: linear-gradient(90deg, #c23b22, #f0a500);
         }
         .medal-icon {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 0.65rem;
+        }
+        .medal-icon svg {
+            width: 42px;
+            height: 42px;
+            filter: drop-shadow(0 0 8px currentColor);
+            transition: transform 0.22s ease;
+        }
+        .target-icon { color: #ffd166; }
+        .wins-icon { color: #70d6b1; }
+        .losses-icon { color: #f08a8a; }
+        @media (hover: hover) {
+            .result-box:hover .medal-icon svg {
+                transform: scale(1.08);
+            }
         }
         h1, h2, h3 { text-transform: uppercase; letter-spacing: 2px; }
         .form-control {
