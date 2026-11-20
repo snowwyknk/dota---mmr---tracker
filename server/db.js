@@ -58,6 +58,43 @@ async function updateProfileMmr(steamId, mmr) {
     return result.rows[0] || null;
 }
 
+async function getHeroProgress(steamId) {
+    const result = await pool.query(
+        `SELECT id, hero_name, hero_level, current_xp, created_at, updated_at
+         FROM hero_progress
+         WHERE steam_id = $1
+         ORDER BY lower(hero_name), hero_name`,
+        [steamId]
+    );
+    return result.rows;
+}
+
+async function saveHeroProgress(steamId, progress) {
+    const result = await pool.query(
+        `INSERT INTO hero_progress (steam_id, hero_key, hero_name, hero_level, current_xp)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (steam_id, hero_key)
+         DO UPDATE SET
+            hero_name = EXCLUDED.hero_name,
+            hero_level = EXCLUDED.hero_level,
+            current_xp = EXCLUDED.current_xp,
+            updated_at = NOW()
+         RETURNING id, hero_name, hero_level, current_xp, created_at, updated_at`,
+        [steamId, progress.heroKey, progress.heroName, progress.level, progress.currentXp]
+    );
+    return result.rows[0];
+}
+
+async function deleteHeroProgress(steamId, heroId) {
+    const result = await pool.query(
+        `DELETE FROM hero_progress
+         WHERE steam_id = $1 AND id = $2
+         RETURNING id`,
+        [steamId, heroId]
+    );
+    return result.rowCount > 0;
+}
+
 async function recordOpenIdNonce(nonce) {
     await pool.query(`DELETE FROM steam_openid_nonces WHERE created_at < NOW() - INTERVAL '1 day'`);
     await pool.query('INSERT INTO steam_openid_nonces (nonce) VALUES ($1)', [nonce]);
@@ -69,5 +106,8 @@ module.exports = {
     findOrCreateProfile,
     getProfile,
     updateProfileMmr,
+    getHeroProgress,
+    saveHeroProgress,
+    deleteHeroProgress,
     recordOpenIdNonce
 };

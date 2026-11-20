@@ -36,13 +36,30 @@
                         <h4 id="steamPersonaName">Игрок Steam</h4>
                         <p class="text-muted mb-1">Steam ID:</p>
                         <a id="steamProfileLink" class="text-warning" target="_blank" rel="noopener noreferrer"></a>
-                        <p class="small text-muted mt-3">Этот профиль и сохранённый MMR видны только вам.</p>
+                        <p class="small text-muted mt-3">Ваш профиль, MMR и прогресс героев видны только вам.</p>
                         <form id="profileForm" class="text-start mt-3">
                             <label class="form-label" for="profileMmr">Мой текущий MMR:</label>
                             <input type="number" id="profileMmr" class="form-control mb-2" min="0" max="100000" step="1" inputmode="numeric" required>
                             <button type="submit" class="btn dota-btn w-100">Сохранить MMR</button>
                             <p id="profileMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
                         </form>
+                        <hr class="profile-divider">
+                        <section class="text-start mt-3" aria-labelledby="savedHeroesTitle">
+                            <h5 id="savedHeroesTitle">Мои герои Dota Plus</h5>
+                            <p class="small text-muted">Прогресс сохраняется приватно в вашем профиле.</p>
+                            <form id="heroProgressForm">
+                                <label class="form-label" for="savedHeroName">Герой:</label>
+                                <input type="text" id="savedHeroName" class="form-control mb-2" maxlength="50" autocomplete="off" placeholder="Например, Pudge" required>
+                                <label class="form-label" for="savedHeroLevel">Текущий уровень:</label>
+                                <select id="savedHeroLevel" class="form-select mb-2" required></select>
+                                <label class="form-label" for="savedHeroXp">Опыт к следующему уровню:</label>
+                                <input type="number" id="savedHeroXp" class="form-control mb-1" value="0" min="0" step="1" inputmode="numeric" required>
+                                <small id="savedHeroXpHint" class="text-muted d-block mb-2"></small>
+                                <button type="submit" class="btn dota-btn w-100">Сохранить героя</button>
+                                <p id="savedHeroMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
+                            </form>
+                            <ul id="savedHeroList" class="saved-hero-list list-unstyled mt-3" aria-live="polite"></ul>
+                        </section>
                         <button id="logoutButton" type="button" class="btn btn-outline-light w-100 mt-3">Выйти</button>
                     </div>
                     <p id="profileLoadError" class="text-danger small mt-3" role="alert" style="display: none;">Не удалось загрузить профиль. Попробуйте обновить страницу.</p>
@@ -84,6 +101,20 @@
                             <small class="text-muted">Оценка: фактическое изменение MMR может отличаться.</small>
                         </div>
                     </div>
+
+                    <section class="rank-status-panel mt-4" aria-labelledby="currentRankTitle">
+                        <div class="d-flex align-items-center gap-3">
+                            <div id="currentRankMedal" class="rank-medal rank-herald" role="img" aria-label="Текущая медаль: Рекрут"></div>
+                            <div class="flex-grow-1">
+                                <h4 id="currentRankTitle" class="h5 mb-1">Текущая медаль: <span id="currentRankName">Рекрут</span></h4>
+                                <p id="currentRankMmrValue" class="mb-2">2 100 MMR</p>
+                                <div class="progress rank-progress" role="progressbar" aria-label="Прогресс до следующей медали" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                    <div id="rankProgressBar" class="progress-bar"></div>
+                                </div>
+                                <small id="rankProgressLabel" class="text-muted d-block mt-2" aria-live="polite"></small>
+                            </div>
+                        </div>
+                    </section>
 
                     <div class="text-center mb-4">
                         <button id="calculateButton" type="button" class="btn dota-btn btn-lg px-5">Рассчитать</button>
@@ -177,9 +208,30 @@
              Уровень 0 означает нового героя: полный путь до 30-го уровня — 72 050 XP. Если герой уже на 1-м уровне, до 30-го остаётся 72 000 XP. Награды и осколки в расчёт не входят.
             </p>
         </section>
+
+        <section class="dota-card p-4 mt-4" aria-labelledby="feedbackTitle">
+            <h2 id="feedbackTitle" class="h3 mb-2">Обратная связь</h2>
+            <p class="text-muted">Нашёл ошибку или есть идея? Напиши мне — откроется почтовое приложение с готовым письмом.</p>
+            <form id="feedbackForm" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="feedbackName">Имя (необязательно)</label>
+                    <input type="text" id="feedbackName" class="form-control" maxlength="80" autocomplete="name">
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="feedbackMessage">Сообщение</label>
+                    <textarea id="feedbackMessage" class="form-control" rows="3" maxlength="2000" required></textarea>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn dota-btn">Написать отзыв</button>
+                    <small id="feedbackStatus" class="text-muted ms-2" role="status" aria-live="polite"></small>
+                </div>
+            </form>
+        </section>
     </div>
 
     <script src="assets/js/hero-progression.js" defer></script>
+    <script src="assets/js/hero-profile.js" defer></script>
     <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/feedback.js" defer></script>
 </body>
 </html>

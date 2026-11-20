@@ -63,6 +63,48 @@ body {
             height: 100%;
             object-fit: cover;
         }
+        .profile-divider {
+            border-color: #514141;
+            opacity: 1;
+        }
+        .saved-hero-item {
+            padding: 0.85rem;
+            border: 1px solid #514141;
+            border-radius: 0.75rem;
+            background: rgba(0, 0, 0, 0.25);
+        }
+        .saved-hero-item + .saved-hero-item {
+            margin-top: 0.75rem;
+        }
+        .saved-hero-heading {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .saved-hero-medal {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+        }
+        .rank-status-panel {
+            padding: 1rem;
+            border: 1px solid #514141;
+            border-radius: 0.75rem;
+            background: rgba(0, 0, 0, 0.25);
+        }
+        .rank-status-panel .rank-medal {
+            flex: 0 0 96px;
+            transform: scale(0.75);
+        }
+        .rank-progress {
+            height: 0.75rem;
+            background-color: #161616;
+            border: 1px solid #514141;
+        }
+        .rank-progress .progress-bar {
+            background: linear-gradient(90deg, #c23b22, #f0a500);
+        }
         .medal-icon {
             font-size: 2.5rem;
             margin-bottom: 10px;

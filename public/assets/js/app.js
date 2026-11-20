@@ -56,8 +56,65 @@
             document.getElementById('rankName').innerText = rankName;
         }
 
+        function updateCurrentRankPreview() {
+            const currentInput = document.getElementById('currentMmr');
+            const mmrValue = Number(currentInput.value);
+            const medal = document.getElementById('currentRankMedal');
+            const rankName = document.getElementById('currentRankName');
+            const rankMmrValue = document.getElementById('currentRankMmrValue');
+            const progressBar = document.getElementById('rankProgressBar');
+            const progress = progressBar.parentElement;
+            const progressLabel = document.getElementById('rankProgressLabel');
+
+            if (currentInput.value.trim() === '' || !Number.isInteger(mmrValue) || mmrValue < 0) {
+                rankName.textContent = '—';
+                rankMmrValue.textContent = 'Введите корректный MMR';
+                progressBar.style.width = '0%';
+                progress.setAttribute('aria-valuenow', '0');
+                progressLabel.textContent = 'MMR должен быть целым числом от 0.';
+                return;
+            }
+
+            const rankOptions = Array.from(document.getElementById('targetRank').options);
+            let currentRankIndex = 0;
+            rankOptions.forEach((option, index) => {
+                if (Number(option.value) <= mmrValue) {
+                    currentRankIndex = index;
+                }
+            });
+
+            const currentRank = rankOptions[currentRankIndex];
+            const currentRankName = currentRank.textContent.split(' (')[0];
+            const rankFloor = Number(currentRank.value);
+            medal.className = `rank-medal rank-${currentRank.dataset.medal}`;
+            medal.setAttribute('aria-label', `Текущая медаль: ${currentRankName}`);
+            rankName.textContent = currentRankName;
+            rankMmrValue.textContent = `${mmrValue.toLocaleString('ru-RU')} MMR`;
+
+            const nextRank = rankOptions[currentRankIndex + 1];
+            if (!nextRank) {
+                progressBar.style.width = '100%';
+                progress.setAttribute('aria-valuenow', '100');
+                progressLabel.textContent = 'Титан — высшая медаль; MMR продолжает расти.';
+                return;
+            }
+
+            const nextRankMmr = Number(nextRank.value);
+            const percent = Math.max(0, Math.min(100,
+                ((mmrValue - rankFloor) / (nextRankMmr - rankFloor)) * 100
+            ));
+            const remainingMmr = nextRankMmr - mmrValue;
+            const nextRankName = nextRank.textContent.split(' (')[0];
+            progressBar.style.width = `${percent}%`;
+            progress.setAttribute('aria-valuenow', String(Math.round(percent)));
+            progressLabel.textContent =
+                `До медали «${nextRankName}» осталось ${remainingMmr.toLocaleString('ru-RU')} MMR.`;
+        }
+
         document.getElementById('targetRank').addEventListener('change', updateRankPreview);
+        document.getElementById('currentMmr').addEventListener('input', updateCurrentRankPreview);
         updateRankPreview();
+        updateCurrentRankPreview();
         document.getElementById('calculateButton').addEventListener('click', calculateMMR);
 
         function initializeHeroProgression() {
@@ -236,7 +293,9 @@
                 if (profile.currentMmr !== null) {
                     document.getElementById('profileMmr').value = profile.currentMmr;
                     document.getElementById('currentMmr').value = profile.currentMmr;
+                    updateCurrentRankPreview();
                 }
+                await window.heroProfileUi.load();
             } catch (error) {
                 profileLoadError.style.display = "block";
                 console.error('Unable to load Steam profile:', error);
@@ -266,6 +325,7 @@
                 }
 
                 document.getElementById('currentMmr').value = data.profile.currentMmr;
+                updateCurrentRankPreview();
                 message.className = "small mt-2 mb-0 text-success";
                 message.innerText = "MMR сохранён в вашем приватном профиле.";
             } catch (error) {

@@ -18,11 +18,18 @@ const {
     findOrCreateProfile,
     getProfile,
     updateProfileMmr,
+    getHeroProgress,
+    saveHeroProgress,
+    deleteHeroProgress,
     recordOpenIdNonce
 } = require('./db');
 const { isValidSteamId, isValidOpenIdNonce } = require('./steam-id');
 const { createSteamLoginState, consumeSteamLoginState } = require('./login-state');
 const { fetchSteamProfile } = require('./steam-profile');
+const {
+    validateHeroProgress,
+    isValidHeroProgressId
+} = require('./hero-progress');
 const { isValidMmr } = require('./validation');
 
 const app = express();
@@ -286,6 +293,47 @@ app.put('/api/me/mmr', preventCaching, profileLimiter, requireAuthentication, re
             return res.status(404).json({ error: 'Профиль не найден. Войдите через Steam ещё раз.' });
         }
         return res.json({ profile: serializeProfile(profile) });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+app.get('/api/me/heroes', preventCaching, profileLimiter, requireAuthentication, async (req, res, next) => {
+    try {
+        const heroes = await getHeroProgress(req.user.steam_id);
+        return res.json({ heroes });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+app.post('/api/me/heroes', preventCaching, profileLimiter, requireAuthentication, requireSameOrigin, async (req, res, next) => {
+    const progress = validateHeroProgress(req.body);
+    if (!progress) {
+        return res.status(400).json({
+            error: 'Укажите имя героя, уровень от 0 до 30 и корректный набранный опыт.'
+        });
+    }
+
+    try {
+        const hero = await saveHeroProgress(req.user.steam_id, progress);
+        return res.json({ hero });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+app.delete('/api/me/heroes/:heroId', preventCaching, profileLimiter, requireAuthentication, requireSameOrigin, async (req, res, next) => {
+    if (!isValidHeroProgressId(req.params.heroId)) {
+        return res.status(400).json({ error: 'Некорректный идентификатор героя.' });
+    }
+
+    try {
+        const deleted = await deleteHeroProgress(req.user.steam_id, req.params.heroId);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Герой не найден в вашем профиле.' });
+        }
+        return res.status(204).end();
     } catch (error) {
         return next(error);
     }
