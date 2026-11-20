@@ -218,9 +218,9 @@ body {
             margin-bottom: 0.65rem;
         }
         .medal-icon svg {
-            width: 42px;
-            height: 42px;
-            filter: drop-shadow(0 0 8px currentColor);
+            width: 30px;
+            height: 30px;
+            filter: drop-shadow(0 0 5px currentColor);
             transition: transform 0.22s ease;
         }
         .target-icon { color: #ffd166; }

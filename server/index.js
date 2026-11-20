@@ -373,7 +373,12 @@ app.delete('/api/me/heroes/:heroId', preventCaching, profileLimiter, requireAuth
 app.use(express.static(path.join(__dirname, '..', 'public'), {
     dotfiles: 'deny',
     index: 'index.html',
-    maxAge: isProduction ? '1h' : 0
+    maxAge: isProduction ? '1h' : 0,
+    setHeaders(res, filePath) {
+        if (/\.(?:html|css|js)$/i.test(filePath)) {
+            res.set('Cache-Control', 'no-cache');
+        }
+    }
 }));
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'API-маршрут не найден.' }));
