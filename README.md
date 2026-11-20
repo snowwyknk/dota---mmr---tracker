@@ -7,7 +7,7 @@
 - `public/` — публичные HTML-страницы и статические файлы.
 - `public/assets/css/` — стили.
 - `public/assets/js/` — логика интерфейса и калькулятора.
-- `public/assets/images/` — медали рангов и значки уровней Dota Plus.
+- `public/assets/images/` — фон сайта, медали рангов и значки уровней Dota Plus.
 - `public/assets/vendor/` — локальные стили Bootstrap без внешнего CDN.
 - `server/` — Express-сервер, Steam OpenID, сессии и приватные API профиля.
 - `migrations/` — SQL-схема PostgreSQL, включая Steam-данные и прогресс героев.
