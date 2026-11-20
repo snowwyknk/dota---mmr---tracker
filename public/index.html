@@ -18,11 +18,21 @@
         <div class="row g-4">
             <!-- Профиль игрока -->
             <div class="col-lg-4">
-                <div class="dota-card p-4 text-center h-100">
+                <div class="dota-card profile-card p-4 text-center h-100">
                     <h3 class="mb-4">Профиль игрока</h3>
                     <p id="loginError" class="text-danger" role="alert" style="display: none;">Не удалось войти через Steam. Попробуйте ещё раз.</p>
                     <div id="profileLoggedOut">
-                        <div class="profile-avatar mb-3" aria-hidden="true">D2</div>
+                        <div class="profile-avatar profile-avatar-frame mb-3" aria-hidden="true">
+                            <span id="guestAvatarFallback">D2</span>
+                            <img id="guestAvatar" class="profile-avatar-image" alt="" style="display: none;">
+                        </div>
+                        <label class="avatar-upload-control">
+                            Выбрать аватар
+                            <input id="guestAvatarFile" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="guestAvatarHint">
+                        </label>
+                        <button id="guestAvatarReset" type="button" class="btn btn-sm avatar-reset-button mt-2" hidden>Сбросить аватар</button>
+                        <small id="guestAvatarHint" class="small text-muted d-block mt-2">Без Steam аватар хранится только в этом браузере; изображение будет обрезано по центру.</small>
+                        <p id="guestAvatarMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
                         <h4>Войдите, чтобы создать профиль</h4>
                         <p class="text-muted">Сохраняйте свой MMR в приватном профиле.</p>
                         <a href="/auth/steam" class="btn dota-btn w-100 mb-2">Войти через Steam</a>
@@ -33,6 +43,13 @@
                             <span id="steamAvatarFallback">D2</span>
                             <img id="steamAvatar" class="profile-avatar-image" alt="" referrerpolicy="no-referrer" style="display: none;">
                         </div>
+                            <label class="avatar-upload-control">
+                                Изменить аватар
+                                <input id="profileAvatarFile" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="profileAvatarHint">
+                            </label>
+                            <button id="profileAvatarReset" type="button" class="btn btn-sm avatar-reset-button mt-2" hidden>Вернуть аватар Steam</button>
+                            <small id="profileAvatarHint" class="small text-muted d-block mt-2">Аватар сохранится приватно в профиле и будет обрезан по центру.</small>
+                            <p id="profileAvatarMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
                         <h4 id="steamPersonaName">Игрок Steam</h4>
                         <p class="text-muted mb-1">Steam ID:</p>
                         <a id="steamProfileLink" class="text-warning" target="_blank" rel="noopener noreferrer"></a>
@@ -68,7 +85,7 @@
 
             <!-- Калькулятор -->
             <div class="col-lg-8">
-                <div class="dota-card p-4 h-100">
+                <div class="dota-card mmr-card p-4 h-100">
                     <h3 class="mb-4 text-center">Калькулятор MMR</h3>
 
                     <div class="row mb-4">
@@ -79,7 +96,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label" for="targetRank">Желаемый ранг:</label>
                             <div class="rank-select-row">
-                                <select id="targetRank" class="form-select form-select-lg" style="background: rgba(0,0,0,0.5); color: #fff; border-color: #555;">
+                                <select id="targetRank" class="form-select form-select-lg">
                                     <option value="0" data-medal="herald">Рекрут (0-769)</option>
                                     <option value="770" data-medal="guardian">Страж (770-1539)</option>
                                     <option value="1540" data-medal="crusader">Рыцарь (1540-2309)</option>
@@ -154,7 +171,7 @@
             </div>
         </div>
 
-        <section class="dota-card p-4 mt-4" aria-labelledby="heroCalculatorTitle">
+        <section class="dota-card hero-calculator-card p-4 mt-4" aria-labelledby="heroCalculatorTitle">
             <h2 id="heroCalculatorTitle" class="h3 mb-2 text-center">Калькулятор уровней героя Dota Plus</h2>
             <p class="text-muted text-center mb-4">Узнайте, сколько опыта нужно герою до выбранного уровня и медали.</p>
 
@@ -209,7 +226,7 @@
             </p>
         </section>
 
-        <section class="dota-card p-4 mt-4" aria-labelledby="feedbackTitle">
+        <section class="dota-card feedback-card p-4 mt-4" aria-labelledby="feedbackTitle">
             <h2 id="feedbackTitle" class="h3 mb-2">Обратная связь</h2>
             <p class="text-muted">Нашёл ошибку или есть идея? Напиши мне — откроется почтовое приложение с готовым письмом.</p>
             <form id="feedbackForm" class="row g-3">
@@ -231,6 +248,7 @@
 
     <script src="assets/js/hero-progression.js" defer></script>
     <script src="assets/js/hero-profile.js" defer></script>
+    <script src="assets/js/avatar.js" defer></script>
     <script src="assets/js/app.js" defer></script>
     <script src="assets/js/feedback.js" defer></script>
 </body>

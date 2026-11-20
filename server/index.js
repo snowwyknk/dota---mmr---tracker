@@ -18,6 +18,7 @@ const {
     findOrCreateProfile,
     getProfile,
     updateProfileMmr,
+    updateProfileAvatar,
     getHeroProgress,
     saveHeroProgress,
     deleteHeroProgress,
@@ -31,6 +32,7 @@ const {
     isValidHeroProgressId
 } = require('./hero-progress');
 const { isValidMmr } = require('./validation');
+const { validateCustomAvatarDataUrl } = require('./avatar-validation');
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
@@ -90,7 +92,6 @@ app.use(helmet({
     }
 }));
 app.use(express.urlencoded({ extended: false, limit: '10kb' }));
-app.use(express.json({ limit: '10kb' }));
 app.use(session({
     name: 'dota.sid',
     store: new PgSession({
@@ -154,6 +155,35 @@ function preventCaching(req, res, next) {
     res.set('Cache-Control', 'no-store');
     return next();
 }
+
+app.put(
+    '/api/me/avatar',
+    preventCaching,
+    profileLimiter,
+    requireAuthentication,
+    requireSameOrigin,
+    express.json({ limit: '260kb' }),
+    async (req, res, next) => {
+        const avatarDataUrl = req.body && req.body.avatarDataUrl;
+        if (avatarDataUrl !== null && !validateCustomAvatarDataUrl(avatarDataUrl)) {
+            return res.status(400).json({
+                error: 'Выберите изображение PNG, JPEG или WebP размером не больше 180 КБ.'
+            });
+        }
+
+        try {
+            const profile = await updateProfileAvatar(req.user.steam_id, avatarDataUrl);
+            if (!profile) {
+                return res.status(404).json({ error: 'Профиль не найден. Войдите через Steam ещё раз.' });
+            }
+            return res.json({ profile: serializeProfile(profile) });
+        } catch (error) {
+            return next(error);
+        }
+    }
+);
+
+app.use(express.json({ limit: '10kb' }));
 
 function createSteamOpenIdStrategy(returnURL) {
     return new SteamOpenIdStrategy({
@@ -226,6 +256,7 @@ function serializeProfile(profile) {
         steamProfileUrl: `https://steamcommunity.com/profiles/${profile.steam_id}`,
         personaName: profile.steam_persona_name,
         avatarUrl: profile.steam_avatar_url,
+        customAvatarDataUrl: profile.custom_avatar_data_url,
         currentMmr: profile.current_mmr,
         createdAt: profile.created_at,
         updatedAt: profile.updated_at
@@ -350,6 +381,15 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'API-маршрут 
 app.use((error, req, res, next) => {
     if (res.headersSent) {
         return next(error);
+    }
+    if (error.type === 'entity.too.large') {
+        const message = req.path === '/api/me/avatar'
+            ? 'Изображение аватара слишком большое.'
+            : 'Размер запроса слишком большой.';
+        return res.status(413).json({ error: message });
+    }
+    if (error.type === 'entity.parse.failed') {
+        return res.status(400).json({ error: 'Некорректный формат запроса.' });
     }
     console.error('Request failed:', error);
     return res.status(500).json({ error: 'Внутренняя ошибка сервера.' });

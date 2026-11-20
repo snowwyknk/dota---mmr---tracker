@@ -276,19 +276,7 @@
                 steamLink.href = profile.steamProfileUrl;
                 steamLink.textContent = profile.steamId;
 
-                const avatar = document.getElementById('steamAvatar');
-                const avatarFallback = document.getElementById('steamAvatarFallback');
-                if (profile.avatarUrl) {
-                    avatar.onload = () => {
-                        avatar.style.display = 'block';
-                        avatarFallback.style.display = 'none';
-                    };
-                    avatar.onerror = () => {
-                        avatar.style.display = 'none';
-                        avatarFallback.style.display = 'block';
-                    };
-                    avatar.src = profile.avatarUrl;
-                }
+                window.avatarUi.applySteamProfile(profile);
 
                 if (profile.currentMmr !== null) {
                     document.getElementById('profileMmr').value = profile.currentMmr;
@@ -363,9 +351,6 @@
             height = canvas.height = window.innerHeight;
         }
 
-        window.addEventListener('resize', resize);
-        resize();
-
         class Particle {
             constructor() {
                 this.x = Math.random() * width;
@@ -404,17 +389,46 @@
             }
         }
 
+        let animationEnabled = false;
+        let animationFrame = null;
+
         function animate() {
+            if (!animationEnabled) {
+                return;
+            }
             ctx.clearRect(0, 0, width, height);
             particles.forEach(p => {
                 p.update();
                 p.draw();
             });
-            requestAnimationFrame(animate);
+            animationFrame = requestAnimationFrame(animate);
         }
 
-        initParticles();
-        animate();
+        function updateMotionPreference(reduceMotion) {
+            animationEnabled = !reduceMotion;
+            if (animationEnabled) {
+                initParticles();
+                animate();
+                return;
+            }
+            if (animationFrame !== null) {
+                cancelAnimationFrame(animationFrame);
+                animationFrame = null;
+            }
+            particles = [];
+            ctx.clearRect(0, 0, width, height);
+        }
 
-        // Пересоздаем частицы при ресайзе
-        window.addEventListener('resize', initParticles);
+        resize();
+        window.addEventListener('resize', () => {
+            resize();
+            if (animationEnabled) {
+                initParticles();
+            }
+        });
+
+        const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+        updateMotionPreference(motionPreference.matches);
+        motionPreference.addEventListener('change', event => {
+            updateMotionPreference(event.matches);
+        });

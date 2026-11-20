@@ -31,7 +31,8 @@ async function findOrCreateProfile(steamId, steamProfile = null) {
             last_login_at = NOW(),
             steam_persona_name = COALESCE(EXCLUDED.steam_persona_name, profiles.steam_persona_name),
             steam_avatar_url = COALESCE(EXCLUDED.steam_avatar_url, profiles.steam_avatar_url)
-         RETURNING steam_id, current_mmr, steam_persona_name, steam_avatar_url, created_at, updated_at`,
+         RETURNING steam_id, current_mmr, steam_persona_name, steam_avatar_url,
+                   custom_avatar_data_url, created_at, updated_at`,
         [steamId, steamProfile ? steamProfile.personaName : null, steamProfile ? steamProfile.avatarUrl : null]
     );
     return result.rows[0];
@@ -39,7 +40,8 @@ async function findOrCreateProfile(steamId, steamProfile = null) {
 
 async function getProfile(steamId) {
     const result = await pool.query(
-        `SELECT steam_id, current_mmr, steam_persona_name, steam_avatar_url, created_at, updated_at
+        `SELECT steam_id, current_mmr, steam_persona_name, steam_avatar_url,
+                custom_avatar_data_url, created_at, updated_at
          FROM profiles
          WHERE steam_id = $1`,
         [steamId]
@@ -52,8 +54,21 @@ async function updateProfileMmr(steamId, mmr) {
         `UPDATE profiles
          SET current_mmr = $2, updated_at = NOW()
          WHERE steam_id = $1
-         RETURNING steam_id, current_mmr, steam_persona_name, steam_avatar_url, created_at, updated_at`,
+         RETURNING steam_id, current_mmr, steam_persona_name, steam_avatar_url,
+                   custom_avatar_data_url, created_at, updated_at`,
         [steamId, mmr]
+    );
+    return result.rows[0] || null;
+}
+
+async function updateProfileAvatar(steamId, avatarDataUrl) {
+    const result = await pool.query(
+        `UPDATE profiles
+         SET custom_avatar_data_url = $2, updated_at = NOW()
+         WHERE steam_id = $1
+         RETURNING steam_id, current_mmr, steam_persona_name, steam_avatar_url,
+                   custom_avatar_data_url, created_at, updated_at`,
+        [steamId, avatarDataUrl]
     );
     return result.rows[0] || null;
 }
@@ -106,6 +121,7 @@ module.exports = {
     findOrCreateProfile,
     getProfile,
     updateProfileMmr,
+    updateProfileAvatar,
     getHeroProgress,
     saveHeroProgress,
     deleteHeroProgress,
