@@ -1,48 +1,45 @@
 // --- 1. ЛОГИКА КАЛЬКУЛЯТОРА ---
+        const winPlural = new Intl.PluralRules('ru-RU');
+        const winLabels = { one: 'победа', few: 'победы', many: 'побед', other: 'победы' };
+
         function calculateMMR() {
             const currentInput = document.getElementById('currentMmr');
             const mmrPerGameInput = document.getElementById('mmrPerGame');
+            const rankSelect = document.getElementById('targetRank');
+            const selectedRank = rankSelect.selectedOptions[0];
             const current = Number(currentInput.value);
-            const target = Number(document.getElementById('targetRank').value);
             const mmrPerGame = Number(mmrPerGameInput.value);
-            const resultsDiv = document.getElementById('results');
-            const errorEl = document.getElementById('calculationError');
-            const mmrNeededEl = document.getElementById('mmrNeeded');
-            const winsNeededEl = document.getElementById('winsNeeded');
-            const lossesNeededEl = document.getElementById('lossesNeeded');
+            const result = document.getElementById('results');
+            const error = document.getElementById('calculationError');
 
-            if (currentInput.value.trim() === "" || !Number.isInteger(current) || current < 0 ||
-                mmrPerGameInput.value.trim() === "" || !Number.isInteger(mmrPerGame) || mmrPerGame < 1) {
-                errorEl.innerText = "Укажи текущий MMR от 0 и целое число MMR за игру (не меньше 1).";
-                errorEl.style.display = "block";
-                resultsDiv.style.display = "none";
-                return;
+            let errorMessage = '';
+            if (currentInput.value === '' || !Number.isSafeInteger(current) || current < 0) {
+                errorMessage = 'Введите текущий MMR целым числом от 0.';
+            } else if (!Number.isSafeInteger(mmrPerGame) || mmrPerGame < 1) {
+                errorMessage = 'Введите MMR за игру целым числом от 1.';
             }
+            error.textContent = errorMessage;
+            error.hidden = !errorMessage;
+            result.hidden = Boolean(errorMessage);
+            if (errorMessage) return;
 
-            errorEl.style.display = "none";
-            const rankOptions = Array.from(document.getElementById('targetRank').options)
-                .map(option => Number(option.value));
-            const mmrDiff = Math.max(0, target - current);
-
-            if (mmrDiff > 0) {
-                mmrNeededEl.innerText = `+${mmrDiff} MMR`;
-                mmrNeededEl.style.color = "#00ff00";
-                winsNeededEl.innerText = Math.ceil(mmrDiff / mmrPerGame) + " игр";
+            const targetName = selectedRank.textContent.split(' (')[0];
+            const needed = Number(selectedRank.value) - current;
+            const goal = document.getElementById('mmrGoal');
+            if (needed > 0) {
+                const wins = Math.ceil(needed / mmrPerGame);
+                const winsLabel = winLabels[winPlural.select(wins)];
+                goal.textContent = `До ранга «${targetName}»: ${needed.toLocaleString('ru-RU')} MMR · ${wins.toLocaleString('ru-RU')} ${winsLabel} подряд`;
             } else {
-                mmrNeededEl.innerText = "Ранг уже достигнут";
-                mmrNeededEl.style.color = "#ff9900";
-                winsNeededEl.innerText = "0 игр";
+                goal.textContent = `Ранг «${targetName}» уже достигнут`;
             }
 
-            const currentRankMmr = rankOptions.filter(rankMmr => rankMmr <= current).pop();
-            if (currentRankMmr === 0) {
-                lossesNeededEl.innerText = "Нет ранга ниже";
-            } else {
-                const lossesToDrop = Math.ceil((current - currentRankMmr + 1) / mmrPerGame);
-                lossesNeededEl.innerText = lossesToDrop + " игр";
-            }
-
-            resultsDiv.style.display = "block";
+            const rankFloor = Array.from(rankSelect.options, option => Number(option.value))
+                .filter(threshold => threshold <= current).pop();
+            const losses = Math.ceil((current - rankFloor + 1) / mmrPerGame);
+            document.getElementById('lossesNeeded').textContent = rankFloor === 0
+                ? 'Нет ранга ниже'
+                : `Поражений подряд до ранга ниже: ${losses.toLocaleString('ru-RU')}`;
         }
 
         function updateRankPreview() {
@@ -66,12 +63,13 @@
             const progress = progressBar.parentElement;
             const progressLabel = document.getElementById('rankProgressLabel');
 
-            if (currentInput.value.trim() === '' || !Number.isInteger(mmrValue) || mmrValue < 0) {
+            if (currentInput.value === '' || !Number.isSafeInteger(mmrValue) || mmrValue < 0) {
+                medal.classList.add('d-none');
                 rankName.textContent = '—';
-                rankMmrValue.textContent = 'Введите корректный MMR';
+                rankMmrValue.textContent = '';
                 progressBar.style.width = '0%';
                 progress.setAttribute('aria-valuenow', '0');
-                progressLabel.textContent = 'MMR должен быть целым числом от 0.';
+                progressLabel.textContent = '';
                 return;
             }
 
@@ -111,11 +109,19 @@
                 `До медали «${nextRankName}» осталось ${remainingMmr.toLocaleString('ru-RU')} MMR.`;
         }
 
-        document.getElementById('targetRank').addEventListener('change', updateRankPreview);
-        document.getElementById('currentMmr').addEventListener('input', updateCurrentRankPreview);
+        function updateCurrentMmr() {
+            updateCurrentRankPreview();
+            calculateMMR();
+        }
+
+        document.getElementById('targetRank').addEventListener('change', () => {
+            updateRankPreview();
+            calculateMMR();
+        });
+        document.getElementById('currentMmr').addEventListener('input', updateCurrentMmr);
+        document.getElementById('mmrPerGame').addEventListener('input', calculateMMR);
         updateRankPreview();
-        updateCurrentRankPreview();
-        document.getElementById('calculateButton').addEventListener('click', calculateMMR);
+        updateCurrentMmr();
 
         function initializeHeroProgression() {
             const progression = window.heroProgression;
@@ -281,8 +287,9 @@
                 if (profile.currentMmr !== null) {
                     document.getElementById('profileMmr').value = profile.currentMmr;
                     document.getElementById('currentMmr').value = profile.currentMmr;
-                    updateCurrentRankPreview();
+                    updateCurrentMmr();
                 }
+                window.mmrHistoryUi.show();
                 await window.heroProfileUi.load();
             } catch (error) {
                 profileLoadError.style.display = "block";
@@ -301,6 +308,9 @@
                 return;
             }
 
+            const saveButton = event.currentTarget.querySelector('button[type="submit"]');
+            if (saveButton.disabled) return;
+            saveButton.disabled = true;
             try {
                 const response = await fetch('/api/me/mmr', {
                     method: 'PUT',
@@ -313,12 +323,15 @@
                 }
 
                 document.getElementById('currentMmr').value = data.profile.currentMmr;
-                updateCurrentRankPreview();
+                updateCurrentMmr();
+                window.mmrHistoryUi.load();
                 message.className = "small mt-2 mb-0 text-success";
                 message.innerText = "MMR сохранён в вашем приватном профиле.";
             } catch (error) {
                 message.className = "small mt-2 mb-0 text-danger";
                 message.innerText = error.message || "Не удалось сохранить MMR.";
+            } finally {
+                saveButton.disabled = false;
             }
         });
 
