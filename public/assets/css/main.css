@@ -212,24 +212,52 @@ body {
         .rank-progress .progress-bar {
             background: linear-gradient(90deg, #c23b22, #f0a500);
         }
-        .medal-icon {
-            display: grid;
-            place-items: center;
-            margin-bottom: 0.65rem;
+        .mmr-result {
+            padding: 0.75rem 1rem;
+            border-inline-start: 3px solid var(--card-accent);
+            background: var(--card-glow);
+            border-radius: 0.25rem;
         }
-        .medal-icon svg {
-            width: 30px;
-            height: 30px;
-            filter: drop-shadow(0 0 5px currentColor);
-            transition: transform 0.22s ease;
+        #mmrGoal {
+            color: var(--card-accent-hover);
+            font-weight: 600;
         }
-        .target-icon { color: #ffd166; }
-        .wins-icon { color: #70d6b1; }
-        .losses-icon { color: #f08a8a; }
-        @media (hover: hover) {
-            .result-box:hover .medal-icon svg {
-                transform: scale(1.08);
-            }
+        .mmr-history {
+            border-top: 1px solid #514141;
+        }
+        .mmr-chart-scale {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding-block: 0.15rem;
+            font-variant-numeric: tabular-nums;
+        }
+        .mmr-chart-plot {
+            width: 100%;
+            min-width: 0;
+            height: 9rem;
+            overflow: visible;
+        }
+        .mmr-chart-grid,
+        .mmr-chart-line {
+            fill: none;
+            vector-effect: non-scaling-stroke;
+        }
+        .mmr-chart-grid {
+            stroke: #514141;
+        }
+        .mmr-chart-line {
+            stroke: var(--card-accent-hover);
+            stroke-width: 2;
+        }
+        .mmr-history-table th,
+        .mmr-history-table td {
+            padding: 0.25rem 0.75rem 0.25rem 0;
+        }
+        .mmr-history-table th:last-child,
+        .mmr-history-table td:last-child {
+            text-align: end;
+            font-variant-numeric: tabular-nums;
         }
         h1, h2, h3 { text-transform: uppercase; letter-spacing: 2px; }
         .form-control {
