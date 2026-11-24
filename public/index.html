@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dota 2 MMR Calculator & Tracker</title>
     <link href="assets/vendor/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/main.css?v=dc51104-small-icons">
+    <link rel="stylesheet" href="assets/css/main.css?v=mmr-history">
 </head>
 <body>
 
@@ -34,7 +34,7 @@
                         <small id="guestAvatarHint" class="small text-muted d-block mt-2">Без Steam аватар хранится только в этом браузере; изображение будет обрезано по центру.</small>
                         <p id="guestAvatarMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
                         <h4>Войдите, чтобы создать профиль</h4>
-                        <p class="text-muted">Сохраняйте свой MMR в приватном профиле.</p>
+                        <p class="text-muted">Сохраняйте MMR и смотрите историю рейтинга в приватном профиле.</p>
                         <a href="/auth/steam" class="btn dota-btn w-100 mb-2">Войти через Steam</a>
                         <small class="text-muted">Сайт не запрашивает и не хранит пароль Steam.</small>
                     </div>
@@ -53,7 +53,7 @@
                         <h4 id="steamPersonaName">Игрок Steam</h4>
                         <p class="text-muted mb-1">Steam ID:</p>
                         <a id="steamProfileLink" class="text-warning" target="_blank" rel="noopener noreferrer"></a>
-                        <p class="small text-muted mt-3">Ваш профиль, MMR и прогресс героев видны только вам.</p>
+                        <p class="small text-muted mt-3">Ваш профиль, история MMR и прогресс героев видны только вам.</p>
                         <form id="profileForm" class="text-start mt-3">
                             <label class="form-label" for="profileMmr">Мой текущий MMR:</label>
                             <input type="number" id="profileMmr" class="form-control mb-2" min="0" max="100000" step="1" inputmode="numeric" required>
@@ -88,12 +88,12 @@
                 <div class="dota-card mmr-card p-4 h-100">
                     <h3 class="mb-4 text-center">Калькулятор MMR</h3>
 
-                    <div class="row mb-4">
-                        <div class="col-md-6 mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
                             <label class="form-label" for="currentMmr">Текущий MMR:</label>
                             <input type="number" id="currentMmr" class="form-control form-control-lg" value="2100" min="0" step="1" inputmode="numeric">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6">
                             <label class="form-label" for="targetRank">Желаемый ранг:</label>
                             <div class="rank-select-row">
                                 <select id="targetRank" class="form-select form-select-lg">
@@ -112,7 +112,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6">
                             <label class="form-label" for="mmrPerGame">MMR за победу / поражение:</label>
                             <input type="number" id="mmrPerGame" class="form-control form-control-lg" value="25" min="1" step="1" inputmode="numeric">
                             <small class="text-muted">Оценка: фактическое изменение MMR может отличаться.</small>
@@ -133,57 +133,48 @@
                         </div>
                     </section>
 
-                    <div class="text-center mb-4">
-                        <button id="calculateButton" type="button" class="btn dota-btn btn-lg px-5">Рассчитать</button>
+                    <p id="calculationError" class="text-danger small mt-3 mb-0" role="alert" hidden></p>
+                    <div id="results" class="mmr-result mt-3" role="status" aria-atomic="true" hidden>
+                        <p id="mmrGoal" class="mb-1"></p>
+                        <p id="lossesNeeded" class="small text-muted mb-0"></p>
                     </div>
 
-                    <!-- Результаты -->
-                    <p id="calculationError" class="text-danger text-center" role="alert" style="display: none;"></p>
-                    <div id="results" aria-live="polite" style="display: none;">
-                        <h4 class="text-center mb-3" style="color: #f0a500;">Результаты</h4>
-
-                        <div class="row text-center">
-                            <div class="col-md-4 mb-2">
-                                <div class="result-box">
-                                    <div class="medal-icon target-icon" aria-hidden="true">
-                                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                            <circle cx="12" cy="12" r="9"></circle>
-                                            <circle cx="12" cy="12" r="5"></circle>
-                                            <circle cx="12" cy="12" r="1"></circle>
-                                            <path d="M22 2 12 12M15 2h7v7"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="text-muted small">До цели</div>
-                                    <strong id="mmrNeeded">0 MMR</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <div class="result-box">
-                                    <div class="medal-icon wins-icon" aria-hidden="true">
-                                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="m4 4 16 16M20 4 4 20"></path>
-                                            <path d="m4 7 3-3m10 0 3 3M4 17l3 3m10 0 3-3"></path>
-                                            <path d="m9 9 2-2m4 8 2-2m-4-4 2-2m-8 8 2-2"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="text-muted small">Побед до цели</div>
-                                    <strong id="winsNeeded">0</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <div class="result-box">
-                                    <div class="medal-icon losses-icon" aria-hidden="true">
-                                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"></path>
-                                            <path d="M12 8v8m-3-3 3 3 3-3"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="text-muted small">Поражений до ранга ниже</div>
-                                    <strong id="lossesNeeded">0</strong>
-                                </div>
-                            </div>
+                    <section id="mmrHistory" class="mmr-history mt-4 pt-4" aria-labelledby="mmrHistoryTitle" hidden>
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <h4 id="mmrHistoryTitle" class="h5 mb-0">История MMR</h4>
+                            <label class="visually-hidden" for="mmrHistoryDays">Период истории MMR</label>
+                            <select id="mmrHistoryDays" class="form-select form-select-sm w-auto">
+                                <option value="7">7 дней</option>
+                                <option value="30">30 дней</option>
+                            </select>
                         </div>
-                    </div>
+                        <p id="mmrHistoryStatus" class="small text-muted mt-3 mb-0" role="status"></p>
+                        <button id="mmrHistoryRetry" type="button" class="btn btn-sm btn-outline-light mt-2" hidden>Повторить загрузку</button>
+                        <figure id="mmrHistoryGraph" class="mt-3 mb-0" hidden>
+                            <figcaption id="mmrHistorySummary" class="mb-2"></figcaption>
+                            <div class="mmr-chart d-flex gap-2" aria-hidden="true">
+                                <div class="mmr-chart-scale small text-muted">
+                                    <span id="mmrHistoryMax"></span>
+                                    <span id="mmrHistoryMin"></span>
+                                </div>
+                                <svg class="mmr-chart-plot" viewBox="0 0 600 144" preserveAspectRatio="none" focusable="false">
+                                    <path class="mmr-chart-grid" d="M 0 6 H 600 M 0 72 H 600 M 0 138 H 600"></path>
+                                    <path id="mmrHistoryLine" class="mmr-chart-line"></path>
+                                </svg>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted mt-1" aria-hidden="true">
+                                <span id="mmrHistoryStart"></span>
+                                <span id="mmrHistoryEnd"></span>
+                            </div>
+                            <details class="mt-3">
+                                <summary class="small">Значения на графике</summary>
+                                <table class="mmr-history-table small mt-2">
+                                    <thead><tr><th scope="col">Дата и время</th><th scope="col">MMR</th></tr></thead>
+                                    <tbody id="mmrHistoryRows"></tbody>
+                                </table>
+                            </details>
+                        </figure>
+                    </section>
 
                 </div>
             </div>
@@ -267,7 +258,8 @@
     <script src="assets/js/hero-progression.js" defer></script>
     <script src="assets/js/hero-profile.js" defer></script>
     <script src="assets/js/avatar.js" defer></script>
-    <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/mmr-history.js" defer></script>
+    <script src="assets/js/app.js?v=mmr-history" defer></script>
     <script src="assets/js/feedback.js" defer></script>
 </body>
 </html>

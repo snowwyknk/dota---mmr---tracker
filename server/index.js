@@ -18,6 +18,7 @@ const {
     findOrCreateProfile,
     getProfile,
     updateProfileMmr,
+    getMmrHistory,
     updateProfileAvatar,
     getHeroProgress,
     saveHeroProgress,
@@ -324,6 +325,20 @@ app.put('/api/me/mmr', preventCaching, profileLimiter, requireAuthentication, re
             return res.status(404).json({ error: 'Профиль не найден. Войдите через Steam ещё раз.' });
         }
         return res.json({ profile: serializeProfile(profile) });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+app.get('/api/me/mmr/history', preventCaching, requireAuthentication, async (req, res, next) => {
+    const days = req.query.days ?? '7';
+    if (days !== '7' && days !== '30') {
+        return res.status(400).json({ error: 'Выберите период в 7 или 30 дней.' });
+    }
+
+    try {
+        const history = await getMmrHistory(req.user.steam_id, Number(days));
+        return res.json(history);
     } catch (error) {
         return next(error);
     }
