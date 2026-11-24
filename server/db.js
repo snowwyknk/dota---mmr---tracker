@@ -61,6 +61,52 @@ async function updateProfileMmr(steamId, mmr) {
     return result.rows[0] || null;
 }
 
+async function getMmrHistory(steamId, days) {
+    const result = await pool.query(
+        `WITH bounds AS (
+            SELECT statement_timestamp() - $2::int * INTERVAL '24 hours' AS start_at,
+                   statement_timestamp() AS end_at
+         ), baseline AS (
+            SELECT id, mmr, recorded_at
+            FROM mmr_history, bounds
+            WHERE steam_id = $1 AND recorded_at < start_at
+            ORDER BY recorded_at DESC, id DESC
+            LIMIT 1
+         ), period AS (
+            SELECT id, mmr, recorded_at
+            FROM mmr_history, bounds
+            WHERE steam_id = $1 AND recorded_at BETWEEN start_at AND end_at
+         ), first_in_period AS (
+            SELECT id, mmr, recorded_at
+            FROM period
+            WHERE NOT EXISTS (SELECT 1 FROM baseline)
+            ORDER BY recorded_at, id
+            LIMIT 1
+         ), daily AS (
+            SELECT DISTINCT ON ((recorded_at AT TIME ZONE 'UTC')::date) id, mmr, recorded_at
+            FROM period
+            ORDER BY (recorded_at AT TIME ZONE 'UTC')::date, recorded_at DESC, id DESC
+         ), points AS (
+            SELECT * FROM baseline
+            UNION
+            SELECT * FROM first_in_period
+            UNION
+            SELECT * FROM daily
+         )
+         SELECT start_at AS start, end_at AS end,
+                COALESCE((
+                    SELECT json_agg(
+                        json_build_object('mmr', mmr, 'recordedAt', recorded_at, 'baseline', recorded_at < start_at)
+                        ORDER BY recorded_at, id
+                    )
+                    FROM points
+                ), '[]'::json) AS points
+         FROM bounds`,
+        [steamId, days]
+    );
+    return result.rows[0];
+}
+
 async function updateProfileAvatar(steamId, avatarDataUrl) {
     const result = await pool.query(
         `UPDATE profiles
@@ -121,6 +167,7 @@ module.exports = {
     findOrCreateProfile,
     getProfile,
     updateProfileMmr,
+    getMmrHistory,
     updateProfileAvatar,
     getHeroProgress,
     saveHeroProgress,
