@@ -6,6 +6,37 @@
     <title>Dota 2 MMR Calculator & Tracker</title>
     <link href="assets/vendor/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/main.css?v=mmr-history">
+    <style>
+        body { background: #101216; }
+        #canvas-bg { opacity: .22; }
+        .tracker-header { border-bottom: 1px solid #45474b; margin-bottom: 1.5rem; padding-bottom: 1rem; }
+        .tracker-header h1 { color: #f4efe5; font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -.035em; text-transform: none; font-weight: 700; margin: 0; }
+        .tracker-header span { color: #d8ac68; font-weight: 400; }
+        .dota-card { border-radius: 12px; box-shadow: 0 6px 24px #0003; }
+        .dota-card::before { display: none; }
+        .mmr-card, .profile-card, .feedback-card { --card-accent: #e9b461; --card-accent-hover: #ffd397; --card-glow: #e9b46112; background: #191c21; border-color: #373c43; }
+        .mmr-card { background: linear-gradient(125deg,#26282b,#181b20 65%); }
+        .dota-card h2,.dota-card h3 { text-transform: none; letter-spacing: -.02em; }
+        .mmr-card .rating-heading { color: #c4c9ce; font-size: 1rem; margin-bottom: 1.25rem; }
+        .rank-status-panel { border: 0; background: none; padding: 0; }
+        .rank-status-panel .rank-medal { transform: none; }
+        #currentRankTitle { color: #f4efe5; font-size: clamp(1.4rem,3vw,2rem); }
+        #currentRankMmrValue { font-size: clamp(1.7rem,4vw,3rem); font-weight: 650; line-height: 1.1; letter-spacing: -.045em; }
+        .rank-progress { height: .45rem; }
+        .rank-progress .progress-bar { background: #e9b461; }
+        .rating-inputs { border-top: 1px solid #3b3e42; margin-top: 1.5rem; }
+        .rating-inputs .form-label { font-size: .88rem; }
+        .rating-inputs input,.rating-inputs select { font-size: 1rem; min-height: 46px; }
+        .guest-avatar-options summary { cursor: pointer; list-style: none; }
+        .guest-avatar-options summary:focus-visible { outline: 3px solid #e9b461; outline-offset: 3px; }
+        #mmrHistorySummary { color: #ffd397; font-size: 1.25rem; font-weight: 600; }
+        .profile-card h3 { font-size: 1.15rem; color: #e5e8ec; }
+        @media(max-width:575px) {
+            .container.py-5 { padding-top: 1.25rem !important; }
+            .mmr-card.p-4 { padding: 1rem !important; }
+            .rating-inputs .col-md-4 { width: 100%; }
+        }
+    </style>
 </head>
 <body>
 
@@ -13,117 +44,19 @@
     <canvas id="canvas-bg"></canvas>
 
     <div class="container py-5">
-        <h1 class="text-center mb-5" style="color: #c23b22; text-shadow: 0 0 10px #c23b22;">Dota 2 Tracker</h1>
+        <header class="tracker-header"><h1>Dota 2 <span>Tracker</span></h1></header>
 
         <div class="row g-4">
-            <!-- Профиль игрока -->
-            <div class="col-lg-4">
-                <div class="dota-card profile-card p-4 text-center h-100">
-                    <h3 class="mb-4">Профиль игрока</h3>
-                    <p id="loginError" class="text-danger" role="alert" style="display: none;">Не удалось войти через Steam. Попробуйте ещё раз.</p>
-                    <div id="profileLoggedOut">
-                        <div class="profile-avatar profile-avatar-frame mb-3" aria-hidden="true">
-                            <span id="guestAvatarFallback">D2</span>
-                            <img id="guestAvatar" class="profile-avatar-image" alt="" style="display: none;">
-                        </div>
-                        <label class="avatar-upload-control">
-                            Выбрать аватар
-                            <input id="guestAvatarFile" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="guestAvatarHint">
-                        </label>
-                        <button id="guestAvatarReset" type="button" class="btn btn-sm avatar-reset-button mt-2" hidden>Сбросить аватар</button>
-                        <small id="guestAvatarHint" class="small text-muted d-block mt-2">Без Steam аватар хранится только в этом браузере; изображение будет обрезано по центру.</small>
-                        <p id="guestAvatarMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
-                        <h4>Войдите, чтобы создать профиль</h4>
-                        <p class="text-muted">Сохраняйте MMR и смотрите историю рейтинга в приватном профиле.</p>
-                        <a href="/auth/steam" class="btn dota-btn w-100 mb-2">Войти через Steam</a>
-                        <small class="text-muted">Сайт не запрашивает и не хранит пароль Steam.</small>
-                    </div>
-                    <div id="profileLoggedIn" style="display: none;">
-                        <div class="profile-avatar profile-avatar-frame mb-3" aria-hidden="true">
-                            <span id="steamAvatarFallback">D2</span>
-                            <img id="steamAvatar" class="profile-avatar-image" alt="" referrerpolicy="no-referrer" style="display: none;">
-                        </div>
-                            <label class="avatar-upload-control">
-                                Изменить аватар
-                                <input id="profileAvatarFile" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="profileAvatarHint">
-                            </label>
-                            <button id="profileAvatarReset" type="button" class="btn btn-sm avatar-reset-button mt-2" hidden>Вернуть аватар Steam</button>
-                            <small id="profileAvatarHint" class="small text-muted d-block mt-2">Аватар сохранится приватно в профиле и будет обрезан по центру.</small>
-                            <p id="profileAvatarMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
-                        <h4 id="steamPersonaName">Игрок Steam</h4>
-                        <p class="text-muted mb-1">Steam ID:</p>
-                        <a id="steamProfileLink" class="text-warning" target="_blank" rel="noopener noreferrer"></a>
-                        <p class="small text-muted mt-3">Ваш профиль, история MMR и прогресс героев видны только вам.</p>
-                        <form id="profileForm" class="text-start mt-3">
-                            <label class="form-label" for="profileMmr">Мой текущий MMR:</label>
-                            <input type="number" id="profileMmr" class="form-control mb-2" min="0" max="100000" step="1" inputmode="numeric" required>
-                            <button type="submit" class="btn dota-btn w-100">Сохранить MMR</button>
-                            <p id="profileMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
-                        </form>
-                        <hr class="profile-divider">
-                        <section class="text-start mt-3" aria-labelledby="savedHeroesTitle">
-                            <h5 id="savedHeroesTitle">Мои герои Dota Plus</h5>
-                            <p class="small text-muted">Прогресс сохраняется приватно в вашем профиле.</p>
-                            <form id="heroProgressForm">
-                                <label class="form-label" for="savedHeroName">Герой:</label>
-                                <input type="text" id="savedHeroName" class="form-control mb-2" maxlength="50" autocomplete="off" placeholder="Например, Pudge" required>
-                                <label class="form-label" for="savedHeroLevel">Текущий уровень:</label>
-                                <select id="savedHeroLevel" class="form-select mb-2" required></select>
-                                <label class="form-label" for="savedHeroXp">Опыт к следующему уровню:</label>
-                                <input type="number" id="savedHeroXp" class="form-control mb-1" value="0" min="0" step="1" inputmode="numeric" required>
-                                <small id="savedHeroXpHint" class="text-muted d-block mb-2"></small>
-                                <button type="submit" class="btn dota-btn w-100">Сохранить героя</button>
-                                <p id="savedHeroMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
-                            </form>
-                            <ul id="savedHeroList" class="saved-hero-list list-unstyled mt-3" aria-live="polite"></ul>
-                        </section>
-                        <button id="logoutButton" type="button" class="btn btn-outline-light w-100 mt-3">Выйти</button>
-                    </div>
-                    <p id="profileLoadError" class="text-danger small mt-3" role="alert" style="display: none;">Не удалось загрузить профиль. Попробуйте обновить страницу.</p>
-                </div>
-            </div>
-
             <!-- Калькулятор -->
             <div class="col-lg-8">
                 <div class="dota-card mmr-card p-4 h-100">
-                    <h3 class="mb-4 text-center">Калькулятор MMR</h3>
+                    <h3 class="rating-heading">Рейтинг MMR</h3>
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label" for="currentMmr">Текущий MMR:</label>
-                            <input type="number" id="currentMmr" class="form-control form-control-lg" value="2100" min="0" step="1" inputmode="numeric">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="targetRank">Желаемый ранг:</label>
-                            <div class="rank-select-row">
-                                <select id="targetRank" class="form-select form-select-lg">
-                                    <option value="0" data-medal="herald">Рекрут (0-769)</option>
-                                    <option value="770" data-medal="guardian">Страж (770-1539)</option>
-                                    <option value="1540" data-medal="crusader">Рыцарь (1540-2309)</option>
-                                    <option value="2310" data-medal="archon" selected>Герой (2310-3079)</option>
-                                    <option value="3080" data-medal="legend">Легенда (3080-3849)</option>
-                                    <option value="3850" data-medal="ancient">Властелин (3850-4619)</option>
-                                    <option value="4620" data-medal="divine">Божество (4620-5419)</option>
-                                    <option value="5420" data-medal="immortal">Титан (5420+)</option>
-                                </select>
-                                <div class="rank-preview" aria-live="polite">
-                                    <div id="rankMedal" class="rank-medal" role="img"></div>
-                                    <span id="rankName"></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="mmrPerGame">MMR за победу / поражение:</label>
-                            <input type="number" id="mmrPerGame" class="form-control form-control-lg" value="25" min="1" step="1" inputmode="numeric">
-                            <small class="text-muted">Оценка: фактическое изменение MMR может отличаться.</small>
-                        </div>
-                    </div>
-
-                    <section class="rank-status-panel mt-4" aria-labelledby="currentRankTitle">
+                    <section class="rank-status-panel" aria-labelledby="currentRankTitle">
                         <div class="d-flex align-items-center gap-3">
                             <div id="currentRankMedal" class="rank-medal rank-herald" role="img" aria-label="Текущая медаль: Рекрут"></div>
                             <div class="flex-grow-1">
-                                <h4 id="currentRankTitle" class="h5 mb-1">Текущая медаль: <span id="currentRankName">Рекрут</span></h4>
+                                <h4 id="currentRankTitle" class="h5 mb-1"><span class="visually-hidden">Текущая медаль: </span><span id="currentRankName">Рекрут</span></h4>
                                 <p id="currentRankMmrValue" class="mb-2">2 100 MMR</p>
                                 <div class="progress rank-progress" role="progressbar" aria-label="Прогресс до следующей медали" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                                     <div id="rankProgressBar" class="progress-bar"></div>
@@ -175,9 +108,106 @@
                             </details>
                         </figure>
                     </section>
+                    <div class="row g-3 rating-inputs">
+                        <div class="col-md-4">
+                            <label class="form-label" for="currentMmr">Текущий MMR:</label>
+                            <input type="number" id="currentMmr" class="form-control form-control-lg" value="2100" min="0" step="1" inputmode="numeric">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="targetRank">Желаемый ранг:</label>
+                            <div class="rank-select-row">
+                                <select id="targetRank" class="form-select form-select-lg">
+                                    <option value="0" data-medal="herald">Рекрут (0-769)</option>
+                                    <option value="770" data-medal="guardian">Страж (770-1539)</option>
+                                    <option value="1540" data-medal="crusader">Рыцарь (1540-2309)</option>
+                                    <option value="2310" data-medal="archon" selected>Герой (2310-3079)</option>
+                                    <option value="3080" data-medal="legend">Легенда (3080-3849)</option>
+                                    <option value="3850" data-medal="ancient">Властелин (3850-4619)</option>
+                                    <option value="4620" data-medal="divine">Божество (4620-5419)</option>
+                                    <option value="5420" data-medal="immortal">Титан (5420+)</option>
+                                </select>
+                                <div class="rank-preview" hidden aria-live="polite">
+                                    <div id="rankMedal" class="rank-medal" role="img"></div>
+                                    <span id="rankName"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="mmrPerGame">MMR за победу / поражение:</label>
+                            <input type="number" id="mmrPerGame" class="form-control form-control-lg" value="25" min="1" step="1" inputmode="numeric">
+                            <small class="text-muted">Оценка: фактическое изменение MMR может отличаться.</small>
+                        </div>
+                    </div>
 
                 </div>
             </div>
+            <!-- Профиль игрока -->
+            <div class="col-lg-4">
+                <div class="dota-card profile-card p-4 text-center ">
+                    <h3 class="mb-3">Профиль игрока</h3>
+                    <p id="loginError" class="text-danger" role="alert" style="display: none;">Не удалось войти через Steam. Попробуйте ещё раз.</p>
+                    <div id="profileLoggedOut">
+                        <details class="guest-avatar-options"><summary aria-label="Настроить аватар" title="Настроить аватар" class="profile-avatar profile-avatar-frame mb-3">
+                            <span id="guestAvatarFallback">D2</span>
+                            <img id="guestAvatar" class="profile-avatar-image" alt="" style="display: none;">
+                        </summary>
+                        <label class="avatar-upload-control">
+                            Выбрать аватар
+                            <input id="guestAvatarFile" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="guestAvatarHint">
+                        </label>
+                        <button id="guestAvatarReset" type="button" class="btn btn-sm avatar-reset-button mt-2" hidden>Сбросить аватар</button>
+                        <small id="guestAvatarHint" class="small text-muted d-block mt-2">Без Steam аватар хранится только в этом браузере; изображение будет обрезано по центру.</small>
+                        <p id="guestAvatarMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
+                        </details>
+                        <p class="text-muted">Сохраняй MMR и следи за прогрессом.</p>
+                        <a href="/auth/steam" class="btn dota-btn w-100 mb-2">Войти через Steam</a>
+                        <small class="text-muted">Сайт не запрашивает и не хранит пароль Steam.</small>
+                    </div>
+                    <div id="profileLoggedIn" style="display: none;">
+                        <div class="profile-avatar profile-avatar-frame mb-3" aria-hidden="true">
+                            <span id="steamAvatarFallback">D2</span>
+                            <img id="steamAvatar" class="profile-avatar-image" alt="" referrerpolicy="no-referrer" style="display: none;">
+                        </div>
+                            <label class="avatar-upload-control">
+                                Изменить аватар
+                                <input id="profileAvatarFile" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="profileAvatarHint">
+                            </label>
+                            <button id="profileAvatarReset" type="button" class="btn btn-sm avatar-reset-button mt-2" hidden>Вернуть аватар Steam</button>
+                            <small id="profileAvatarHint" class="small text-muted d-block mt-2">Аватар сохранится приватно в профиле и будет обрезан по центру.</small>
+                            <p id="profileAvatarMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
+                        <h4 id="steamPersonaName">Игрок Steam</h4>
+                        <p class="text-muted mb-1">Steam ID:</p>
+                        <a id="steamProfileLink" class="text-warning" target="_blank" rel="noopener noreferrer"></a>
+                        <p class="small text-muted mt-3">Ваш профиль, история MMR и прогресс героев видны только вам.</p>
+                        <form id="profileForm" class="text-start mt-3">
+                            <label class="form-label" for="profileMmr">Мой текущий MMR:</label>
+                            <input type="number" id="profileMmr" class="form-control mb-2" min="0" max="100000" step="1" inputmode="numeric" required>
+                            <button type="submit" class="btn dota-btn w-100">Сохранить MMR</button>
+                            <p id="profileMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
+                        </form>
+                        <hr class="profile-divider">
+                        <section class="text-start mt-3" aria-labelledby="savedHeroesTitle">
+                            <h5 id="savedHeroesTitle">Мои герои Dota Plus</h5>
+                            <p class="small text-muted">Прогресс сохраняется приватно в вашем профиле.</p>
+                            <form id="heroProgressForm">
+                                <label class="form-label" for="savedHeroName">Герой:</label>
+                                <input type="text" id="savedHeroName" class="form-control mb-2" maxlength="50" autocomplete="off" placeholder="Например, Pudge" required>
+                                <label class="form-label" for="savedHeroLevel">Текущий уровень:</label>
+                                <select id="savedHeroLevel" class="form-select mb-2" required></select>
+                                <label class="form-label" for="savedHeroXp">Опыт к следующему уровню:</label>
+                                <input type="number" id="savedHeroXp" class="form-control mb-1" value="0" min="0" step="1" inputmode="numeric" required>
+                                <small id="savedHeroXpHint" class="text-muted d-block mb-2"></small>
+                                <button type="submit" class="btn dota-btn w-100">Сохранить героя</button>
+                                <p id="savedHeroMessage" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
+                            </form>
+                            <ul id="savedHeroList" class="saved-hero-list list-unstyled mt-3" aria-live="polite"></ul>
+                        </section>
+                        <button id="logoutButton" type="button" class="btn btn-outline-light w-100 mt-3">Выйти</button>
+                    </div>
+                    <p id="profileLoadError" class="text-danger small mt-3" role="alert" style="display: none;">Не удалось загрузить профиль. Попробуйте обновить страницу.</p>
+                </div>
+            </div>
+
         </div>
 
         <section class="dota-card hero-calculator-card p-4 mt-4" aria-labelledby="heroCalculatorTitle">
@@ -238,7 +268,7 @@
         <section class="dota-card feedback-card p-4 mt-4" aria-labelledby="feedbackTitle">
             <h2 id="feedbackTitle" class="h3 mb-2">Обратная связь</h2>
             <p class="text-muted">Нашёл ошибку или есть идея? Напиши мне — откроется почтовое приложение с готовым письмом.</p>
-            <form id="feedbackForm" class="row g-3">
+            <form id="feedbackForm" class="row g-3 rating-inputs">
                 <div class="col-md-4">
                     <label class="form-label" for="feedbackName">Имя (необязательно)</label>
                     <input type="text" id="feedbackName" class="form-control" maxlength="80" autocomplete="name">
