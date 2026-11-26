@@ -37,6 +37,11 @@
             .rating-inputs .col-md-4 { width: 100%; }
         }
     </style>
+    <link rel="icon" href="/icon-32.png" type="image/png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#191c21">
+    <script src="/pwa.js" defer></script>
 </head>
 <body>
 
@@ -44,7 +49,7 @@
     <canvas id="canvas-bg"></canvas>
 
     <div class="container py-5">
-        <header class="tracker-header"><h1>Dota 2 <span>Tracker</span></h1></header>
+        <header class="tracker-header"><h1>Dota 2 <span>Tracker</span></h1><small id="offline-status" role="status" hidden>Офлайн · калькуляторы доступны. Для профиля Steam нужен интернет.</small></header>
 
         <div class="row g-4">
             <!-- Калькулятор -->
